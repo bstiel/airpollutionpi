@@ -1,0 +1,7 @@
+data:
+  path: /home/pi/data
+server:
+  url: https://datalake.ninja/api/timeseries
+  token: $TOKEN
+labels:
+  name: pi-1

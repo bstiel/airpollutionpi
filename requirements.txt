@@ -1,0 +1,5 @@
+Adafruit-DHT==1.4.0
+pigpio==1.42
+pytz==2018.7
+PyYAML==3.13
+requests==2.12.4
