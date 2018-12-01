@@ -1,7 +1,9 @@
 Datalake
 --------
 
-Datalake is a general-purpose IoT timeseries storage service, available at https://datalake.ninja
+Datalake is a general-purpose IoT timeseries storage service.
+
+The datalake service is also open-source and available at [https://github.com/bstiel/datalake](https://github.com/bstiel/datalake).
 
 
 Client

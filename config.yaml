@@ -1,7 +1,5 @@
+id: raspberry-pi-1  # optional, if omitted, id defaults to the mac address
 data:
-  path: /home/pi/data
+  path: /home/pi/data # where to queue the data to be sent to the server
 server:
-  url: https://datalake.ninja/api/timeseries
-  token: $TOKEN
-labels:
-  name: pi-1
+  url: http://192.168.1.1/api # url to post the data to (datalake service)

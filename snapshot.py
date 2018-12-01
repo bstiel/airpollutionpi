@@ -19,13 +19,8 @@ path = config['data']['path']
 if not os.path.exists(path):
     os.makedirs(path)
 
-# custom labels
-labels = config.get('labels', {})
-
-# default labels
-labels.update({
-    'mac': ':'.join(("%012X" % get_mac())[i:i+2] for i in range(0, 12, 2))
-})
+# timeseries id - from yaml, if not provided, defaults to mac
+identifier = config.get('id', ':'.join(("%012X" % get_mac())[i:i+2] for i in range(0, 12, 2)))
 
 # collect raspberry pi healthcheck data
 with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
@@ -44,13 +39,11 @@ timestamp = datetime.utcnow().replace(tzinfo=pytz.UTC)
 # create json
 reading = {
     'ts': timestamp.isoformat(),
-    'labels': labels,
+    'id': identifier,
     'data': {
-        'h': humidity,
-        't': temperature,
-        '_': {
-            't': cpu_temp
-        }
+        'temperature': temperature,
+        'humidity': humidity,
+        '_cpu_temperature': cpu_temp
     }
 }
 
