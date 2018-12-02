@@ -20,7 +20,7 @@ if not os.path.exists(path):
     os.makedirs(path)
 
 # timeseries id - from yaml, if not provided, defaults to mac
-identifier = config.get('id', ':'.join(("%012X" % get_mac())[i:i+2] for i in range(0, 12, 2)))
+identifier = config.get('id', ':'.join(("%012x" % get_mac())[i:i+2] for i in range(0, 12, 2)))
 
 # collect raspberry pi healthcheck data
 with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
