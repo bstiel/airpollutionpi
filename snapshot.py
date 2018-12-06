@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+import logging.handlers
 import json
 import pytz
 import Adafruit_DHT as dht
@@ -22,7 +23,7 @@ if not os.path.exists(config['logging']['path']):
     os.makedirs(config['logging']['path'])
 
 file_handler = logging.handlers.RotatingFileHandler(
-    config['logging']['path'],
+    os.path.join(config['logging']['path'], 'snapshot.log'),
     maxBytes=10485760,
     backupCount=100,
     encoding='utf-8')
