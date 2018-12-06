@@ -4,7 +4,7 @@ import json
 import yaml
 
 # load config
-with open('config.yaml', 'r') as f:
+with open(os.path.join(os.path.dirname(__file__), '..', 'config.yaml'), 'r') as f:
     config = yaml.load(f)
 
 

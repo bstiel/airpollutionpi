@@ -1,4 +1,8 @@
 id: raspberry-pi-1  # optional, if omitted, id defaults to the mac address
+logging:
+  format: "[%(asctime)s] [%(levelname)s] [%(name)s] [%(funcName)s():%(lineno)s] [PID:%(process)d] %(message)s"
+  path: /home/pi/logs
+  level: info
 data:
   path: /home/pi/data # where to queue the data to be sent to the server
 server:
