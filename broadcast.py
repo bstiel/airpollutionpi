@@ -54,7 +54,7 @@ for fname in files:
     delete_file = False
     try:
         last_modified = os.path.getmtime(fname)
-        logger.info('Process file %s [%]' % (fname, datetime.fromtimestamp(last_modified).isoformat()))
+        logger.info('Process file %s [%s]' % (fname, datetime.fromtimestamp(last_modified).isoformat()))
         with open(fname, 'r') as f:
             data = json.load(f)
         payload = [data]
