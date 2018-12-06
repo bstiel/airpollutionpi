@@ -5,6 +5,9 @@ import json
 import yaml
 import requests
 
+from datetime import datetime
+
+
 # load config
 with open(os.path.join(os.path.dirname(__file__), '..', 'config.yaml'), 'r') as f:
     config = yaml.load(f)
@@ -50,6 +53,8 @@ logger.info('Found %s file(s)' % len(files))
 for fname in files:
     delete_file = False
     try:
+        last_modified = os.path.getmtime(fname)
+        logger.info('Process file %s [%]' % (fname, datetime.fromtimestamp(last_modified).isoformat()))
         with open(fname, 'r') as f:
             data = json.load(f)
         payload = [data]
