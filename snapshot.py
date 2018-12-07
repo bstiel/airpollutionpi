@@ -9,6 +9,7 @@ import yaml
 
 from uuid import uuid4, getnode as get_mac
 from datetime import datetime
+from sensors import SDS011
 
 
 # load config
@@ -57,9 +58,20 @@ logger.info('Collect raspberry health data')
 with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
     cpu_temp = float(f.read()) / 1000.
 
-# taske the humidity and temp reading
+# take the humidity and temp reading
 logger.info('Collect DHT22 data')
 humidity, temperature = dht.read_retry(dht.DHT22, 4)
+
+# take the pm2.5 and pm10 readings
+pm25 = None
+pm10 = None
+try:
+    logger.info('Collect particulate matter data')
+    sds011 = SDS011("/dev/ttyUSB0", use_query_mode=True)
+    pm25, pm10 = sds011.query()
+except Exception as ex:
+    logger.warning('Could not read particulate matter data', exc_info=True)
+
 
 # round humidity and temperature
 humidity = round(humidity, 2)
@@ -78,6 +90,12 @@ reading = {
         '_cpu_temperature': cpu_temp
     }
 }
+
+if pm25 is not None:
+    reading['data']['PM2.5'] = pm25
+
+if pm10 is not None:
+    reading['data']['PM10'] = pm10
 
 fname = os.path.join(path, str(uuid4()))
 logger.info('Write data to file: %s => %s.tmp' % (reading, fname))

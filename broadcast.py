@@ -67,7 +67,7 @@ for fname in files:
         logger.info('File %s contains invalid json' % fname)
         delete_file = True
     except Exception as ex:
-        logger.warning('Exception while trying to POST:' , exc_info=True)
+        logger.warning('Exception while trying to POST:', exc_info=True)
 
     if delete_file:
         logger.info('Delete file %s' % fname)
