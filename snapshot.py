@@ -79,7 +79,7 @@ if 'dht22' in sensors:
     humidity, temperature = dht.read_retry(dht.DHT22, 4)
 
 # bm280
-if 'dht22' in sensors:
+if 'bme280' in sensors:
     import smbus2, bme280
     port = 1
     address = 0x76
