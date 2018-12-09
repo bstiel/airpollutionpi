@@ -4,17 +4,21 @@ import logging
 import logging.handlers
 import json
 import pytz
-import Adafruit_DHT as dht
 import yaml
 
 from uuid import uuid4, getnode as get_mac
 from datetime import datetime
-from sensors import SDS011
 
 
 # load config
 with open(os.path.join(os.path.dirname(__file__), '..', 'config.yaml'), 'r') as f:
     config = yaml.load(f)
+
+# load which sensors we want to use from config
+sensors = [c.lower() for c in config['data']['input']]
+
+if 'dht22' in sensors and 'bme280' in sensors:
+    logger.warning('You are collecting data from DHT22 and BME280. DHT22/BME280 overwrite temperature and humidity.')
 
 
 # configure logger
@@ -53,24 +57,49 @@ if not os.path.exists(path):
 # timeseries id - from yaml, if not provided, defaults to mac
 identifier = config.get('id', ':'.join(("%012x" % get_mac())[i:i+2] for i in range(0, 12, 2)))
 
-# collect raspberry pi healthcheck data
-logger.info('Collect raspberry health data')
-with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
-    cpu_temp = float(f.read()) / 1000.
 
-# take the humidity and temp reading
-logger.info('Collect DHT22 data')
-humidity, temperature = dht.read_retry(dht.DHT22, 4)
-
-# take the pm2.5 and pm10 readings
+# set defaults
+cpu_temp = None
 pm25 = None
 pm10 = None
-try:
-    logger.info('Collect particulate matter data')
-    sds011 = SDS011("/dev/ttyUSB0", use_query_mode=True)
-    pm25, pm10 = sds011.query()
-except Exception as ex:
-    logger.warning('Could not read particulate matter data', exc_info=True)
+temperature = None
+humidity = None
+pressure = None
+
+# raspberry pi healthcheck data
+if 'healthcheck' in sensors:
+    logger.info('Collect raspberry health data')
+    with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
+        cpu_temp = float(f.read()) / 1000.
+
+# DHT22
+if 'dht22' in sensors:
+    import Adafruit_DHT as dht
+    logger.info('Collect data from DHT22')
+    humidity, temperature = dht.read_retry(dht.DHT22, 4)
+
+# bm280
+if 'dht22' in sensors:
+    import smbus2, bme280
+    port = 1
+    address = 0x76
+    logger.info('Collect data from BME280')
+    bus = smbus2.SMBus(port)
+    calibration_params = bme280.load_calibration_params(bus, address)
+    data = bme280.sample(bus, address, calibration_params)
+    humidity = data.humidity
+    temperature = data.temperature
+    pressure = data.pressure
+
+# sds011
+if 'sds011' in sensors:
+    from sensors import SDS011
+    try:
+        logger.info('Collect data from SDS011')
+        sds011 = SDS011("/dev/ttyUSB0", use_query_mode=True)
+        pm25, pm10 = sds011.query()
+    except Exception as ex:
+        logger.warning('Could not read particulate matter data', exc_info=True)
 
 
 # round humidity and temperature
@@ -80,6 +109,9 @@ if humidity is not None:
 if temperature is not None:
     temperature = round(temperature, 2)
 
+if pressure is not None:
+    pressure = round(pressure, 2)
+
 # make timestamp timezone-aware
 timestamp = datetime.utcnow().replace(tzinfo=pytz.UTC)
 
@@ -87,18 +119,20 @@ timestamp = datetime.utcnow().replace(tzinfo=pytz.UTC)
 reading = {
     'ts': timestamp.isoformat(),
     'id': identifier,
-    'data': {
-        '_cpu_temperature': cpu_temp
-    }
+    'data': {}
 }
+
+if cpu_temp is not None:
+    reading['data']['_cpu_temperature'] = cpu_temp
 
 if temperature is not None:
     reading['data']['temperature'] = temperature
 
-
 if humidity is not None:
     reading['data']['humidity'] = humidity
 
+if pressure is not None:
+    reading['data']['pressure'] = pressure
 
 if pm25 is not None:
     reading['data']['PM2.5'] = pm25
@@ -106,10 +140,14 @@ if pm25 is not None:
 if pm10 is not None:
     reading['data']['PM10'] = pm10
 
-fname = os.path.join(path, str(uuid4()))
-logger.info('Write data to file: %s => %s.tmp' % (reading, fname))
-with open(fname + '.tmp', 'w') as f:
-    json.dump(reading, f)
+if reading['data']:
+    fname = os.path.join(path, str(uuid4()))
+    logger.info('Write data to file: %s => %s.tmp' % (reading, fname))
+    with open(fname + '.tmp', 'w') as f:
+        json.dump(reading, f)
 
-logger.info('Rename file: %s.tmp => %s' % (fname, fname))
-os.rename(fname + '.tmp', fname)
+    logger.info('Rename file: %s.tmp => %s' % (fname, fname))
+    os.rename(fname + '.tmp', fname)
+
+else:
+    logger.info('No data collected, exit')

@@ -4,3 +4,4 @@ pyserial==3.4
 pytz==2018.7
 PyYAML==3.13
 requests==2.20.1
+RPi.bme280==0.2.2
