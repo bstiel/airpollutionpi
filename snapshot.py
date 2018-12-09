@@ -74,8 +74,11 @@ except Exception as ex:
 
 
 # round humidity and temperature
-humidity = round(humidity, 2)
-temperature = round(temperature, 2)
+if humidity is not None:
+    humidity = round(humidity, 2)
+
+if temperature is not None:
+    temperature = round(temperature, 2)
 
 # make timestamp timezone-aware
 timestamp = datetime.utcnow().replace(tzinfo=pytz.UTC)
@@ -85,11 +88,17 @@ reading = {
     'ts': timestamp.isoformat(),
     'id': identifier,
     'data': {
-        'temperature': temperature,
-        'humidity': humidity,
         '_cpu_temperature': cpu_temp
     }
 }
+
+if temperature is not None:
+    reading['data']['temperature'] = temperature
+
+
+if humidity is not None:
+    reading['data']['humidity'] = humidity
+
 
 if pm25 is not None:
     reading['data']['PM2.5'] = pm25
