@@ -81,6 +81,7 @@ if 'gps' in sensors:
     report = {'class': ''}
     while report['class'] not in ('TPV', 'SKY'):
         report = gpsd.next()
+        logger.debug(report)
 
     if report['class'] == 'TPV':
         gps_ = {**report}
