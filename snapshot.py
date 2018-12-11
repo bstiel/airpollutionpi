@@ -83,16 +83,22 @@ if 'gps' in input_sensors:
     ser = serial.Serial(port, baudrate=9600, timeout=0.5)
     continue_ = True
     t = time.time()
-    data = None
+    gps_ = {}
     timeout = 2.0
-    while not data and (time.time() - t) < timeout:
+    read = True
+    while read and (time.time() - t) < timeout:
         raw = ser.readline().decode('utf-8')
         logger.debug('GPS raw data: %s' % raw)
-        data = gps.parse(raw)
-    if data:
-        logger.info('GPS data: %s' % data)
-    else:
-        logger.info('No GPS data available')
+        nmea = gps.parse(raw)
+    if nmea:
+        logger.debug('GPS data: %s' % nmea)
+        gps_.update(nmea)
+    
+    # wait for GPRMC and GPGGA 
+    if 'altitude' in gps_ and 'speed' in gps_:
+        read = False
+    
+    logger.info('GPS data: %s' % gps_)
 
 
 # DHT22
