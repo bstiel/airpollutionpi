@@ -84,12 +84,15 @@ if 'gps' in input_sensors:
     continue_ = True
     t = time.time()
     data = None
-    while not data and (time.time() - t) < 2.0:
-        data = gps.parse(ser.readline())
+    timeout = 2.0
+    while not data and (time.time() - t) < timeout:
+        raw = ser.readline().decode('utf-8')
+        logger.debug('GPS raw data: %s' % raw)
+        data = gps.parse(raw)
     if data:
         logger.info('GPS data: %s' % data)
     else:
-        logger.info('No GPS data avail')
+        logger.info('No GPS data available')
 
 
 # DHT22
