@@ -79,10 +79,17 @@ if 'gps' in sensors:
     logger.info('Get GPS fix')
     import gps
     gpsd = gps.gps()
-    for field in ['alt', 'climb', 'lat', 'long', 'speed', 'time', 'track']:
-        value = getattr(gpsd.fix, field)
+    for name, attr in [
+            ('alt', 'altitude'),
+            ('climb', 'climb'),
+            ('lat', 'latitude'),
+            ('long', 'longitude'),
+            ('speed', 'speed'),
+            ('time', 'time'),
+            ('track', 'track')]:
+        value = getattr(gpsd.fix, attr)
         if not math.isnan(value):
-            gps_[field] = value
+            gps_[name] = value
 
 
 # DHT22
