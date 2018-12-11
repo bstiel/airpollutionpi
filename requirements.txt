@@ -1,4 +1,5 @@
 Adafruit-DHT==1.4.0
+gps==3.9
 pigpio==1.42
 pyserial==3.4
 pytz==2018.7

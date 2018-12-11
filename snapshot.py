@@ -65,12 +65,23 @@ pm10 = None
 temperature = None
 humidity = None
 pressure = None
+gps_ = {}
 
 # raspberry pi healthcheck data
 if 'healthcheck' in sensors:
     logger.info('Collect raspberry health data')
     with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
         cpu_temp = float(f.read()) / 1000.
+
+# GPS
+if 'gps' in sensors:
+    import gps
+    gpsd = gps(mode=gps.WATCH_ENABLE|gps.WATCH_NEWSTYLE)
+    report = {'class': ''}
+    while report['class'] != 'TPV':
+        report = gpsd.next()
+    gps_ = {**report}
+    
 
 # DHT22
 if 'dht22' in sensors:
@@ -119,6 +130,7 @@ timestamp = datetime.utcnow().replace(tzinfo=pytz.UTC)
 reading = {
     'ts': timestamp.isoformat(),
     'id': identifier,
+    'gps': gps_,
     'data': {}
 }
 

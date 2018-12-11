@@ -7,6 +7,7 @@ data:
   path: /home/pi/data # where to queue the data to be sent to the server
   input:
     - healthcheck
+    - gps
     - bme280
     - sds011
 server:
