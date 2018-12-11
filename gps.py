@@ -21,8 +21,8 @@ def parse(data):
         timestamp = "20" + sdata[9][4:6] + "-" + sdata[9][2:4] + "-" + sdata[9][0:2] + "T" + time
         return {
             'timestamp': timestamp,
-            'lat': float(lat) * (-1 if north_south == 'S' else 1),
-            'lon': float(lon) * (-1 if east_west == 'W' else 1),
+            'lat': float(lat) * (-1 if north_south == 'S' else 1) / 1000.,
+            'lon': float(lon) * (-1 if east_west == 'W' else 1) / 1000.,
             'speed': float(speed),
             'tc': tr_course
         }
