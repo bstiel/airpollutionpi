@@ -18,7 +18,7 @@ def parse(data):
         east_west = sdata[6] #longitude direction E/W
         speed = sdata[7] # speed in knots
         track = sdata[8] # True course
-        timestamp = "20" + sdata[9][4:6] + "-" + sdata[9][2:4] + "-" + sdata[9][0:2] + "T" + time
+        timestamp = "20" + sdata[9][4:6] + "-" + sdata[9][2:4] + "-" + sdata[9][0:2] + "T" + time + "+00:00"
         return {
             'datetime': timestamp,
             'latitude': float(lat) * (-1 if north_south == 'S' else 1) / 100.,
@@ -43,5 +43,5 @@ def parse(data):
             'time': time,
             'latitude': float(lat) * (-1 if north_south == 'S' else 1) / 100.,
             'longitude': float(lon) * (-1 if east_west == 'W' else 1) / 100.,
-            'altitude': float(altitude),
+            'altitude': float(altitude)
         }
