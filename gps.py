@@ -40,7 +40,7 @@ def parse(data):
         east_west = sdata[5] #longitude direction E/W
         altitude = sdata[9] # altitude
         return {
-            'time': timestamp,
+            'time': time,
             'latitude': float(lat) * (-1 if north_south == 'S' else 1) / 100.,
             'longitude': float(lon) * (-1 if east_west == 'W' else 1) / 100.,
             'altitude': float(altitude),
