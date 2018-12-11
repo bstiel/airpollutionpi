@@ -1,4 +1,5 @@
 import os
+import math
 import time
 import logging
 import logging.handlers
@@ -77,15 +78,12 @@ if 'healthcheck' in sensors:
 if 'gps' in sensors:
     logger.info('Get GPS fix')
     import gps
-    gpsd = gps.gps(mode=gps.WATCH_ENABLE|gps.WATCH_NEWSTYLE)
-    report = {'class': ''}
-    while report['class'] not in ('TPV', 'SKY'):
-        report = gpsd.next()
-        logger.debug(report)
+    gpsd = gps.gps()
+    for field in ['alt', 'climb', 'lat', 'long', 'speed', 'time', 'track']:
+        value = getattr(gpsd.fix, field)
+        if not math.isnan(value):
+            gps_[field] = value
 
-    if report['class'] == 'TPV':
-        gps_ = {**report}
-    
 
 # DHT22
 if 'dht22' in sensors:
