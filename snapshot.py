@@ -6,6 +6,8 @@ import logging.handlers
 import json
 import pytz
 import yaml
+import serial
+import gps
 
 from uuid import uuid4, getnode as get_mac
 from datetime import datetime
@@ -16,9 +18,9 @@ with open(os.path.join(os.path.dirname(__file__), '..', 'config.yaml'), 'r') as 
     config = yaml.load(f)
 
 # load which sensors we want to use from config
-sensors = [c.lower() for c in config['data']['input']]
+input_sensors = [c.lower() for c in config['data']['input']]
 
-if 'dht22' in sensors and 'bme280' in sensors:
+if 'dht22' in input_sensors and 'bme280' in input_sensors:
     logger.warning('You are collecting data from DHT22 and BME280. DHT22/BME280 overwrite temperature and humidity.')
 
 
@@ -69,37 +71,35 @@ pressure = None
 gps_ = {}
 
 # raspberry pi healthcheck data
-if 'healthcheck' in sensors:
+if 'healthcheck' in input_sensors:
     logger.info('Collect raspberry health data')
     with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
         cpu_temp = float(f.read()) / 1000.
 
 # GPS
-if 'gps' in sensors:
+if 'gps' in input_sensors:
     logger.info('Get GPS fix')
-    import gps
-    gpsd = gps.gps()
-    for name, attr in [
-            ('alt', 'altitude'),
-            ('climb', 'climb'),
-            ('lat', 'latitude'),
-            ('long', 'longitude'),
-            ('speed', 'speed'),
-            ('time', 'time'),
-            ('track', 'track')]:
-        value = getattr(gpsd.fix, attr)
-        if not math.isnan(value):
-            gps_[name] = value
+    port = '/dev/ttyACM0'
+    ser = serial.Serial(port, baudrate=9600, timeout=0.5)
+    continue_ = True
+    t = time.time()
+    data = None
+    while not data and (time.time() - t) < 2.0:
+        data = gps.parse(ser.readline())
+    if data:
+        logger.info('GPS data: %s' % data)
+    else:
+        logger.info('No GPS data avail')
 
 
 # DHT22
-if 'dht22' in sensors:
+if 'dht22' in input_sensors:
     import Adafruit_DHT as dht
     logger.info('Collect data from DHT22')
     humidity, temperature = dht.read_retry(dht.DHT22, 4)
 
 # bm280
-if 'bme280' in sensors:
+if 'bme280' in input_sensors:
     import smbus2, bme280
     port = 1
     address = 0x76
@@ -112,7 +112,7 @@ if 'bme280' in sensors:
     pressure = data.pressure
 
 # sds011
-if 'sds011' in sensors:
+if 'sds011' in input_sensors:
     from sensors import SDS011
     try:
         logger.info('Collect data from SDS011')
