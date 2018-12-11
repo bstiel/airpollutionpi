@@ -152,9 +152,12 @@ reading = {
 }
 
 # gps data
-for attr in ['latitude', 'longitude', 'elevation', 'speed']:
+for attr in ['latitude', 'longitude', 'speed']:
     if attr in gps_:
         reading[attr] = gps_[attr]
+
+if 'altitude' in gps_:
+    reading['elevation'] = gps_['altitude']
 
 if cpu_temp is not None:
     reading['data']['_cpu_temperature'] = cpu_temp
