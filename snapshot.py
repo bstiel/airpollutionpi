@@ -76,7 +76,7 @@ if 'healthcheck' in sensors:
 # GPS
 if 'gps' in sensors:
     import gps
-    gpsd = gps(mode=gps.WATCH_ENABLE|gps.WATCH_NEWSTYLE)
+    gpsd = gps.gps(mode=gps.WATCH_ENABLE|gps.WATCH_NEWSTYLE)
     report = {'class': ''}
     while report['class'] != 'TPV':
         report = gpsd.next()
