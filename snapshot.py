@@ -148,9 +148,13 @@ timestamp = datetime.utcnow().replace(tzinfo=pytz.UTC)
 reading = {
     'ts': timestamp.isoformat(),
     'id': identifier,
-    'gps': gps_,
     'data': {}
 }
+
+# gps data
+for attr in ['latitude', 'longitude', 'elevation', 'speed']:
+    if attr in gps_:
+        reading[attr] = gps_[attr]
 
 if cpu_temp is not None:
     reading['data']['_cpu_temperature'] = cpu_temp
