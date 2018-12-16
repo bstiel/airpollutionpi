@@ -45,7 +45,7 @@ logging.root.addHandler(console_handler)
 logger = logging.getLogger(__name__)
 
 # get output path
-path = config['data']['path']
+path = config['data']['output']
 
 # create path if it does not exist
 if not os.path.exists(path):
