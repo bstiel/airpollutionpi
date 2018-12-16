@@ -7,7 +7,7 @@ import json
 import pytz
 import yaml
 import serial
-import Geohash
+import geohash2
 import gps
 
 from uuid import uuid4
@@ -95,7 +95,7 @@ if 'gps' in input_sensors:
                 read = False
         logger.info('GPS data: %s' % gps_)
         if 'latitude' in gps_ and 'longitude' in gps_:
-            geohash = Geohash.encode(latitude=gps_['latitude'], longitude=gps_['longitude'])
+            geohash = geohash2.encode(latitude=gps_['latitude'], longitude=gps_['longitude'])
             data.append('geohash,id=%s,source=gps value=%s %s' % (identifier, geohash, timestamp))
             data.append('latitude,id=%s,source=gps value=%s %s' % (identifier, gps_['latiude'], timestamp))
             data.append('longitude,id=%s,source=gps value=%s %s' % (identifier, gps_['longitude'], timestamp))
