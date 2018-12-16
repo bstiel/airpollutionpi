@@ -41,11 +41,8 @@ logger = logging.getLogger(__name__)
 # get data path
 path = config['data']['output']
 
-# get url and token
+# get url and auth
 url = config['server']['url']
-token = config['server']['token']
-
-# basic auth
 auth = (config['server']['user'], config['server']['password'])
 
 # get all files (exclude .tmp files)
