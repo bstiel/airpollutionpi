@@ -7,10 +7,10 @@ import json
 import pytz
 import yaml
 import serial
+import Geohash
 import gps
 
-from uuid import uuid4, getnode as get_mac
-from datetime import datetime
+from uuid import uuid4
 
 
 # load config
@@ -18,11 +18,7 @@ with open(os.path.join(os.path.dirname(__file__), '..', 'config.yaml'), 'r') as 
     config = yaml.load(f)
 
 # load which sensors we want to use from config
-input_sensors = [c.lower() for c in config['data']['input']]
-
-if 'dht22' in input_sensors and 'bme280' in input_sensors:
-    logger.warning('You are collecting data from DHT22 and BME280. DHT22/BME280 overwrite temperature and humidity.')
-
+input_sensors = [c.lower() for c in config['data'].get('input', {}).get('sensors', [])]
 
 # configure logger
 formatter = logging.Formatter(config['logging']['format'])
@@ -46,11 +42,9 @@ logging.root.setLevel(log_level)
 logging.root.addHandler(file_handler)
 logging.root.addHandler(console_handler)
 
-# get logger
 logger = logging.getLogger(__name__)
 
-
-# get data path
+# get output path
 path = config['data']['path']
 
 # create path if it does not exist
@@ -58,130 +52,120 @@ if not os.path.exists(path):
     os.makedirs(path)
 
 # timeseries id - from yaml, if not provided, defaults to mac
-identifier = config.get('id', ':'.join(("%012x" % get_mac())[i:i+2] for i in range(0, 12, 2)))
+identifier = config['id']
 
+# data
+data = []
 
-# set defaults
-cpu_temp = None
-pm25 = None
-pm10 = None
-temperature = None
-humidity = None
-pressure = None
-gps_ = {}
+# get timestamp
+timestamp = int(time.time() * 10**9) # influxdb expects epoch in nanoseconds
 
-# raspberry pi healthcheck data
+# raspberry pi internal healthcheck data
 if 'healthcheck' in input_sensors:
+    cpu_temp = None
     logger.info('Collect raspberry health data')
-    with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
-        cpu_temp = float(f.read()) / 1000.
+    try:
+        with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
+            cpu_temp = float(f.read()) / 1000.
+        data.append('cpu_temperature,id=%s,source=internal value=%s %s' % (identifier, cpu_temp, timestamp))
+    except Exception as ex:
+        logger.exception(ex)
 
 # GPS
 if 'gps' in input_sensors:
-    logger.info('Get GPS fix')
-    port = '/dev/ttyACM0'
-    ser = serial.Serial(port, baudrate=9600, timeout=0.5)
-    continue_ = True
-    t = time.time()
-    gps_ = {}
-    timeout = 2.0
-    read = True
-    while read and (time.time() - t) < timeout:
-        raw = ser.readline().decode('utf-8')
-        logger.debug('GPS raw data: %s' % raw)
-        nmea = gps.parse(raw)
-        if nmea:
-            logger.debug('GPS data: %s' % nmea)
-            gps_.update(nmea)
-    
-        # stop if we have both GPRMC and GPGGA
-        if 'altitude' in gps_ and 'speed' in gps_:
-            read = False
-    
-    logger.info('GPS data: %s' % gps_)
+    try:
+        logger.info('Get GPS fix')
+        port = '/dev/ttyACM0'
+        ser = serial.Serial(port, baudrate=9600, timeout=0.5)
+        continue_ = True
+        t = time.time()
+        gps_ = {}
+        timeout = 2.0
+        read = True
+        while read and (time.time() - t) < timeout:
+            raw = ser.readline().decode('utf-8')
+            logger.debug('GPS raw data: %s' % raw)
+            nmea = gps.parse(raw)
+            if nmea:
+                logger.debug('GPS data: %s' % nmea)
+                gps_.update(nmea)
+        
+            # stop if we have both GPRMC and GPGGA
+            if 'altitude' in gps_ and 'speed' in gps_:
+                read = False
+        logger.info('GPS data: %s' % gps_)
+        if 'latitude' in gps_ and 'longitude' in gps_:
+            geohash = Geohash.encode(latitude=gps_['latitude'], longitude=gps_['longitude'])
+            data.append('geohash,id=%s,source=gps value=%s %s' % (identifier, geohash, timestamp))
+            data.append('latitude,id=%s,source=gps value=%s %s' % (identifier, gps_['latiude'], timestamp))
+            data.append('longitude,id=%s,source=gps value=%s %s' % (identifier, gps_['longitude'], timestamp))
+        if 'speed' in gps_:
+            data.append('speed,id=%s,source=gps value=%s %s' % (identifier, gps_['speed'], timestamp))
+        if 'altitude' in gps_:
+            data.append('altitude,id=%s,source=gps value=%s %s' % (identifier, gps_['altitude'], timestamp))
+    except Exception as ex:
+        logger.exception(ex)
 
 
-# DHT22
+# dht22
 if 'dht22' in input_sensors:
-    import Adafruit_DHT as dht
-    logger.info('Collect data from DHT22')
-    humidity, temperature = dht.read_retry(dht.DHT22, 4)
+    try:
+        import Adafruit_DHT as dht
+        logger.info('Collect data from DHT22')
+        humidity, temperature = dht.read_retry(dht.DHT22, 4)
+        if humidity is not None:
+            data.append('humidity,id=%s,source=dht22 value=%s %s' % (identifier, round(humidity, 2), timestamp))
+        if temperature is not None:
+            data.append('temperature,id=%s,source=dht22 value=%s %s' % (identifier, round(temperature, 2), timestamp))
+    except Exception as ex:
+        logger.exception(ex)
 
 # bm280
 if 'bme280' in input_sensors:
-    import smbus2, bme280
-    port = 1
-    address = 0x76
-    logger.info('Collect data from BME280')
-    bus = smbus2.SMBus(port)
-    calibration_params = bme280.load_calibration_params(bus, address)
-    data = bme280.sample(bus, address, calibration_params)
-    humidity = data.humidity
-    temperature = data.temperature
-    pressure = data.pressure
+    try:
+        import smbus2, bme280
+        port = 1
+        address = 0x76
+        logger.info('Collect data from BME280')
+        bus = smbus2.SMBus(port)
+        calibration_params = bme280.load_calibration_params(bus, address)
+        data = bme280.sample(bus, address, calibration_params)
+
+        if data.humidity is not None:
+            data.append('humidity,id=%s,source=bme280 value=%s %s' % (identifier, round(data.humidity, 2), timestamp))
+
+        if data.temperature is not None:
+            data.append('temperature,id=%s,source=bme280 value=%s %s' % (identifier, round(data.temperature, 2), timestamp))
+
+        if data.pressure is not None:
+            data.append('pressure,id=%s,source=bme280 value=%s %s' % (identifier, round(data.pressure, 2), timestamp))
+
+    except Exception as ex:
+        logger.exception(ex)
+
 
 # sds011
 if 'sds011' in input_sensors:
-    from sensors import SDS011
     try:
+        from sensors import SDS011
         logger.info('Collect data from SDS011')
         sds011 = SDS011("/dev/ttyUSB0", use_query_mode=True)
         pm25, pm10 = sds011.query()
+
+        if pm25 is not None:
+            data.append('pm2.5,id=%s,source=sds011 value=%s %s' % (identifier, pm25, timestamp))
+
+        if pm10 is not None:
+            data.append('pm10,id=%s,source=sds011 value=%s %s' % (identifier, pm10, timestamp))
+
     except Exception as ex:
-        logger.warning('Could not read particulate matter data', exc_info=True)
+        logger.exception(ex)
 
-
-# round humidity and temperature
-if humidity is not None:
-    humidity = round(humidity, 2)
-
-if temperature is not None:
-    temperature = round(temperature, 2)
-
-if pressure is not None:
-    pressure = round(pressure, 2)
-
-# make timestamp timezone-aware
-timestamp = datetime.utcnow().replace(tzinfo=pytz.UTC)
-
-# create json
-reading = {
-    'ts': timestamp.isoformat(),
-    'id': identifier,
-    'data': {}
-}
-
-# gps data
-for attr in ['latitude', 'longitude', 'speed']:
-    if attr in gps_:
-        reading[attr] = gps_[attr]
-
-if 'altitude' in gps_:
-    reading['elevation'] = gps_['altitude']
-
-if cpu_temp is not None:
-    reading['data']['_cpu_temperature'] = cpu_temp
-
-if temperature is not None:
-    reading['data']['temperature'] = temperature
-
-if humidity is not None:
-    reading['data']['humidity'] = humidity
-
-if pressure is not None:
-    reading['data']['pressure'] = pressure
-
-if pm25 is not None:
-    reading['data']['PM2.5'] = pm25
-
-if pm10 is not None:
-    reading['data']['PM10'] = pm10
-
-if reading['data']:
+if data:
     fname = os.path.join(path, str(uuid4()))
-    logger.info('Write data to file: %s => %s.tmp' % (reading, fname))
+    logger.info('Write data to file: %s => %s.tmp' % (data, fname))
     with open(fname + '.tmp', 'w') as f:
-        json.dump(reading, f)
+        f.write('\n'.join(data))
 
     logger.info('Rename file: %s.tmp => %s' % (fname, fname))
     os.rename(fname + '.tmp', fname)

@@ -4,12 +4,14 @@ logging:
   path: /home/pi/logs
   level: info
 data:
-  path: /home/pi/data # where to queue the data to be sent to the server
+  output: /home/pi/data
   input:
-    - healthcheck
-    - gps
-    - bme280
-    - sds011
+    sensors:
+      - healthcheck
+      - gps
+      - bme280
+      - sds011
 server:
   url: http://192.168.1.1/api # url to post the data to (datalake service)
-  token: token
+  user: user
+  password: password

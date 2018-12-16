@@ -39,11 +39,14 @@ logger = logging.getLogger(__name__)
 
 
 # get data path
-path = config['data']['path']
+path = config['data']['output']
 
 # get url and token
 url = config['server']['url']
 token = config['server']['token']
+
+# basic auth
+auth = (config['server']['user'], config['server']['password'])
 
 # get all files (exclude .tmp files)
 logger.info('Collect files in path %s' % path)
@@ -56,10 +59,10 @@ for fname in files:
         last_modified = os.path.getmtime(fname)
         logger.info('Process file %s [%s]' % (fname, datetime.fromtimestamp(last_modified).isoformat()))
         with open(fname, 'r') as f:
-            data = json.load(f)
-        payload = [data]
-        logger.info('POST %s: %s' % (url, payload))
-        response = requests.post(url, json=payload, headers={'Authorization': token})
+            data = f.read()
+
+        logger.info('POST %s: %s' % (url, data))
+        response = requests.post(url, data=data, auth=auth, headers={'Content-Type': 'application/octet-stream'}, timeout=2.)
         logger.info('Response: %s' % response.status_code)
         if response.ok:
             delete_file = True
