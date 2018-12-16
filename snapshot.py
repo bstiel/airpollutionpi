@@ -129,16 +129,16 @@ if 'bme280' in input_sensors:
         logger.info('Collect data from BME280')
         bus = smbus2.SMBus(port)
         calibration_params = bme280.load_calibration_params(bus, address)
-        data = bme280.sample(bus, address, calibration_params)
+        bme280_readings = bme280.sample(bus, address, calibration_params)
 
-        if data.humidity is not None:
-            data.append('humidity,id=%s,source=bme280 value=%s %s' % (identifier, round(data.humidity, 2), timestamp))
+        if bme280_readings.humidity is not None:
+            data.append('humidity,id=%s,source=bme280 value=%s %s' % (identifier, round(bme280_readings.humidity, 2), timestamp))
 
-        if data.temperature is not None:
-            data.append('temperature,id=%s,source=bme280 value=%s %s' % (identifier, round(data.temperature, 2), timestamp))
+        if bme280_readings.temperature is not None:
+            data.append('temperature,id=%s,source=bme280 value=%s %s' % (identifier, round(bme280_readings.temperature, 2), timestamp))
 
-        if data.pressure is not None:
-            data.append('pressure,id=%s,source=bme280 value=%s %s' % (identifier, round(data.pressure, 2), timestamp))
+        if bme280_readings.pressure is not None:
+            data.append('pressure,id=%s,source=bme280 value=%s %s' % (identifier, round(bme280_readings.pressure, 2), timestamp))
 
     except Exception as ex:
         logger.exception(ex)
