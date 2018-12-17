@@ -97,7 +97,7 @@ if 'gps' in input_sensors:
         if 'latitude' in gps_ and 'longitude' in gps_:
             geohash = geohash2.encode(latitude=gps_['latitude'], longitude=gps_['longitude'])
             data.append('geohash,id=%s,source=gps value=%s %s' % (identifier, geohash, timestamp))
-            data.append('latitude,id=%s,source=gps value=%s %s' % (identifier, gps_['latiude'], timestamp))
+            data.append('latitude,id=%s,source=gps value=%s %s' % (identifier, gps_['latitude'], timestamp))
             data.append('longitude,id=%s,source=gps value=%s %s' % (identifier, gps_['longitude'], timestamp))
         if 'speed' in gps_:
             data.append('speed,id=%s,source=gps value=%s %s' % (identifier, gps_['speed'], timestamp))
