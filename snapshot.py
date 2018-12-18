@@ -67,11 +67,13 @@ if 'healthcheck' in input_sensors:
     try:
         with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
             cpu_temp = float(f.read()) / 1000.
-        data.append('cpu_temperature,id=%s,source=internal value=%s %s' % (identifier, cpu_temp, timestamp))
+        data.append('healthcheck,source=%s,input=internal cpu_temperature=%s %s' % (identifier, cpu_temp, timestamp))
     except Exception as ex:
         logger.exception(ex)
 
 # GPS
+geohash = None
+altitude = None
 if 'gps' in input_sensors:
     try:
         logger.info('Get GPS fix')
@@ -95,14 +97,18 @@ if 'gps' in input_sensors:
                 read = False
         logger.info('GPS data: %s' % gps_)
         if 'latitude' in gps_ and 'longitude' in gps_:
+            gps_['latitude'] = round(gps_['latitude'], 6)
+            gps_['longitude'] = round(gps_['longitude'], 6)
             geohash = geohash2.encode(latitude=gps_['latitude'], longitude=gps_['longitude'])
-            data.append('geohash,id=%s,source=gps value="%s" %s' % (identifier, geohash, timestamp))
-            data.append('latitude,id=%s,source=gps value=%s %s' % (identifier, gps_['latitude'], timestamp))
-            data.append('longitude,id=%s,source=gps value=%s %s' % (identifier, gps_['longitude'], timestamp))
+            data.append('position,source=%s,input=gps geohash="%s" %s' % (identifier, geohash, timestamp))
+            data.append('position,source=%s,input=gps latitude=%s %s' % (identifier, gps_['latitude'], timestamp))
+            data.append('position,source=%s,input=gps longitude=%s %s' % (identifier, gps_['longitude'], timestamp))
         if 'speed' in gps_:
-            data.append('speed,id=%s,source=gps value=%s %s' % (identifier, gps_['speed'], timestamp))
+            gps_['speed'] = round(gps_['speed'], 0)
+            data.append('position,source=%s,input=gps speed=%s %s' % (identifier, gps_['speed'], timestamp))
         if 'altitude' in gps_:
-            data.append('altitude,id=%s,source=gps value=%s %s' % (identifier, gps_['altitude'], timestamp))
+            gps_['altitude'] = round(gps_['altitude'], 0)
+            data.append('position,source=%s,input=gps altitude=%s %s' % (identifier, gps_['altitude'], timestamp))
     except Exception as ex:
         logger.exception(ex)
 
@@ -114,9 +120,23 @@ if 'dht22' in input_sensors:
         logger.info('Collect data from DHT22')
         humidity, temperature = dht.read_retry(dht.DHT22, 4)
         if humidity is not None:
-            data.append('humidity,id=%s,source=dht22 value=%s %s' % (identifier, round(humidity, 2), timestamp))
+            humidity = round(humidity, 2)
+            s = 'weather,source=%s,input=dht22' % identifier
+            if geohash is not None:
+                s += ',geohash=%s' % geohash
+            if altitude is not None:
+                s += ',altitude=%s' % altitude
+            s += ' humidity=%s %s' % (humidity, timestamp)
+            data.append(s)
         if temperature is not None:
-            data.append('temperature,id=%s,source=dht22 value=%s %s' % (identifier, round(temperature, 2), timestamp))
+            temperature = round(temperature, 2)
+            s = 'weather,source=%s,input=dht22' % identifier
+            if geohash is not None:
+                s += ',geohash=%s' % geohash
+            if altitude is not None:
+                s += ',altitude=%s' % altitude
+            s += ' temperature=%s %s' % (temperature, timestamp)
+            data.append(s)
     except Exception as ex:
         logger.exception(ex)
 
@@ -132,13 +152,34 @@ if 'bme280' in input_sensors:
         bme280_readings = bme280.sample(bus, address, calibration_params)
 
         if bme280_readings.humidity is not None:
-            data.append('humidity,id=%s,source=bme280 value=%s %s' % (identifier, round(bme280_readings.humidity, 2), timestamp))
+            humidity = round(bme280_readings.humidity, 2)
+            s = 'weather,source=%s,input=bme280' % identifier
+            if geohash is not None:
+                s += ',geohash=%s' % geohash
+            if altitude is not None:
+                s += ',altitude=%s' % altitude
+            s += ' humidity=%s %s' % (humidity, timestamp)
+            data.append(s)
 
         if bme280_readings.temperature is not None:
-            data.append('temperature,id=%s,source=bme280 value=%s %s' % (identifier, round(bme280_readings.temperature, 2), timestamp))
+            temperature = round(bme280_readings.temperature, 2)
+            s = 'weather,source=%s,input=bme280' % identifier
+            if geohash is not None:
+                s += ',geohash=%s' % geohash
+            if altitude is not None:
+                s += ',altitude=%s' % altitude
+            s += ' temperature=%s %s' % (temperature, timestamp)
+            data.append(s)
 
         if bme280_readings.pressure is not None:
-            data.append('pressure,id=%s,source=bme280 value=%s %s' % (identifier, round(bme280_readings.pressure, 2), timestamp))
+            pressure = round(bme280_readings.pressure, 2)
+            s = 'weather,source=%s,input=bme280' % identifier
+            if geohash is not None:
+                s += ',geohash=%s' % geohash
+            if altitude is not None:
+                s += ',altitude=%s' % altitude
+            s += ' pressure=%s %s' % (pressure, timestamp)
+            data.append(s)
 
     except Exception as ex:
         logger.exception(ex)
@@ -153,10 +194,24 @@ if 'sds011' in input_sensors:
         pm25, pm10 = sds011.query()
 
         if pm25 is not None:
-            data.append('pm2.5,id=%s,source=sds011 value=%s %s' % (identifier, pm25, timestamp))
+            pm25 = round(pm25, 2)
+            s = 'pollution,source=%s,input=sds011' % identifier
+            if geohash is not None:
+                s += ',geohash=%s' % geohash
+            if altitude is not None:
+                s += ',altitude=%s' % altitude
+            s += ' pm2.5=%s %s' % (pm25, timestamp)
+            data.append(s)
 
         if pm10 is not None:
-            data.append('pm10,id=%s,source=sds011 value=%s %s' % (identifier, pm10, timestamp))
+            pm10 = round(pm10, 2)
+            s = 'pollution,source=%s,input=sds011' % identifier
+            if geohash is not None:
+                s += ',geohash=%s' % geohash
+            if altitude is not None:
+                s += ',altitude=%s' % altitude
+            s += ' pm10=%s %s' % (pm10, timestamp)
+            data.append(s)
 
     except Exception as ex:
         logger.exception(ex)
