@@ -100,7 +100,7 @@ if 'gps' in input_sensors:
             gps_['latitude'] = round(gps_['latitude'], 6)
             gps_['longitude'] = round(gps_['longitude'], 6)
             geohash = geohash2.encode(latitude=gps_['latitude'], longitude=gps_['longitude'])
-            data.append('position,source=%s,input=gps geohash="%s" %s' % (identifier, geohash, timestamp))
+            data.append('position,source=%s,input=gps geohash=%s %s' % (identifier, geohash, timestamp))
             data.append('position,source=%s,input=gps latitude=%s %s' % (identifier, gps_['latitude'], timestamp))
             data.append('position,source=%s,input=gps longitude=%s %s' % (identifier, gps_['longitude'], timestamp))
         if 'speed' in gps_:
@@ -217,7 +217,8 @@ if 'sds011' in input_sensors:
         logger.exception(ex)
 
 if data:
-    fname = os.path.join(path, str(uuid4()))
+    # fname = os.path.join(path, str(uuid4()))
+    fname = os.path.join(path, str(timestamp))
     logger.info('Write data to file: %s => %s.tmp' % (data, fname))
     with open(fname + '.tmp', 'w') as f:
         f.write('\n'.join(data))
