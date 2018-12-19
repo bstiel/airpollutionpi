@@ -4,6 +4,16 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _to_decimal(v):
+    """Convert lat/long to decimal
+       e.g. 5133.75141 => 51 degrees 33.75141' => 51 + 33.75141/60 => 51.5625235
+    """
+    degrees = float(v[:2])
+    minutes = float(v[2:])
+    d = degrees + minutes / 60.
+    return d
+
+
 def parse(data):
     if data[0:6] == "$GPRMC":
         sdata = data.split(",")
@@ -21,8 +31,8 @@ def parse(data):
         timestamp = "20" + sdata[9][4:6] + "-" + sdata[9][2:4] + "-" + sdata[9][0:2] + "T" + time + "+00:00"
         return {
             'datetime': timestamp,
-            'latitude': float(lat) * (-1 if north_south == 'S' else 1) / 100.,
-            'longitude': float(lon) * (-1 if east_west == 'W' else 1) / 100.,
+            'latitude': _to_decimal(lat) * (-1 if north_south == 'S' else 1),
+            'longitude': _to_decimal(lon) * (-1 if east_west == 'W' else 1),
             'speed': float(speed) * 1.852,
             'track': float(track) if track != '' else None 
         }
@@ -41,7 +51,7 @@ def parse(data):
         altitude = sdata[9] # altitude
         return {
             'time': time,
-            'latitude': float(lat) * (-1 if north_south == 'S' else 1) / 100.,
-            'longitude': float(lon) * (-1 if east_west == 'W' else 1) / 100.,
+            'latitude': _to_decimal(lat) * (-1 if north_south == 'S' else 1),
+            'longitude': _to_decimal(lon) * (-1 if east_west == 'W' else 1),
             'altitude': float(altitude)
         }
