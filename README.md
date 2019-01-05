@@ -33,7 +33,7 @@ Worksheets
 ### Bill of materials
 
 
-* Raspberry Pi with Wifi. Any Raspberry Pi will do as long as it has Wifi. Because it is small and has Wifi built in and comes with a header that saves you some soldering, I recommend the [Raspberry Pi Zero W with a pre soldered head](https://shop.pimoroni.com/products/raspberry-pi-zero-wh-with-pre-soldered-header)
+* [Raspberry Pi Zero W with a pre soldered head](https://shop.pimoroni.com/products/raspberry-pi-zero-wh-with-pre-soldered-header) - I like this one as it is small, has Wifi built in and comes with a header to save you some soldering but  any Raspberry Pi will do as long as it has Wifi
 * [SDS011 Particulate Matter PM2.5 and PM10 sensor](https://www.ebay.co.uk/itm/292796389252)
 * [BME280 Temperature, Humidity and Pressure sensor](https://shop.pimoroni.com/products/adafruit-bme280-i2c-or-spi-temperature-humidity-pressure-sensor)
 * [GPS USB Dongle](https://www.ebay.co.uk/itm/GPS-USB-Dongle-Receiver-Windows-10-8-7-Vista-XP-CE-Linux-Google-Earth-Sat-Nav/113247927027)
