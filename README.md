@@ -1,11 +1,12 @@
-Datalake
---------
+Air Pollution Pi
+----------------
 
-Datalake is a general-purpose IoT timeseries storage service.
-
-The datalake service is also open-source and available at [https://github.com/bstiel/datalake](https://github.com/bstiel/datalake).
+The _Air Pollution Pi_ is a mobile Raspberry Pi air pollution monitoring station.
 
 
-Client
+![Air Pollution Pi in a bottle](https://github.com/bstiel/airpollutionpi/raw/master/image01.jpg "Air Pollution Pi in a bottle")
+
+
+Worksheets
 ------
 This repository contains some example scripts for Raspberry Pi.
