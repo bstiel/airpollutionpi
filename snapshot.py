@@ -51,8 +51,8 @@ path = config['data']['output']
 if not os.path.exists(path):
     os.makedirs(path)
 
-# timeseries id - from yaml, if not provided, defaults to mac
-identifier = config['id']
+# timeseries id - from yaml, if not provided, create random uuid
+identifier = config.get('id', str(uuid4()))
 
 # data
 data = []
