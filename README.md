@@ -37,3 +37,17 @@ Worksheets
 * [SDS011 Particulate Matter PM2.5 and PM10 sensor](https://www.ebay.co.uk/itm/292796389252)
 * [BME280 Temperature, Humidity and Pressure sensor](https://shop.pimoroni.com/products/adafruit-bme280-i2c-or-spi-temperature-humidity-pressure-sensor)
 * [GPS USB Dongle](https://www.ebay.co.uk/itm/GPS-USB-Dongle-Receiver-Windows-10-8-7-Vista-XP-CE-Linux-Google-Earth-Sat-Nav/113247927027)
+
+
+# wpa_supplicant.conf
+
+```
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=GB
+
+network={
+        ssid="ssid"
+        psk="password"
+        id_str="any name"
+```
