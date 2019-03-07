@@ -1,7 +1,7 @@
 Air Pollution Pi
 ----------------
 
-The _Air Pollution Pi_ is a Raspberry Pi air pollution monitoring station. 
+The _Air Pollution Pi_ is a Raspberry Pi air pollution monitoring station.
 
 It measures:
 
@@ -11,7 +11,7 @@ It measures:
 * Humidity
 * Barometric Pressure
 
-The _Air Pollition Pi_ takes a reading every 60 seconds. The exact time and location for each reading is recorded.
+The _Air Pollution Pi_ takes a reading every 60 seconds. The exact time and location for each reading is recorded.
 
 When  not connected to a Wifi, all readings are written to the Raspberry Pi's SD card.
 
@@ -88,15 +88,17 @@ For the following steps you need to *connected* to your Raspberry Pi via ssh (se
 
 1. Run `sudo raspi-config`. This will take you to a menu. With the arrow keys select `5 Interfacing Options`. Then `P5 I2C Enable/Disable automatic loading of I2C kernel module`. Select `Yes` when asked `Would you like the ARM I2C interface to be enabled?` and confirm by pressing enter. When you see `The ARM I2C interface is enabled` screen, confirm by pressing enter. Exit the menu via `Finish` (you get there with the tab key) or the Escape key.
 
-2. Run `sudo apt-get install git python-pip3 -y` 
+2. Run `sudo apt-get install git python3-pip -y`
 
-3. Run `git clone https://github.com/bstiel/airpollutionpi.git` 
+3. Run `git clone https://github.com/bstiel/airpollutionpi.git`
 
-4. Run `nano config.yaml`. Copy & paste the content from the `config.yaml` template into the editor. Under server, set the correct values for url, user and password.  When done, exit the nano editor via `Ctrl+X`. Answer `Save modified buffer?"` with `Y` and confirm `File Name to Write: config.yaml` with `Enter`.
+4. Copy the `config.yaml` file template from the inside the `airpollutionpi` folder one level up `cp airpollutionpi/config.yaml config.yaml`
 
-5. Test everything is working: `cd airpollutionpi`
+5. Run `nano config.yaml`. Under server, set the correct values for url, user and password, which will have been sent to you separately.  When done, exit the nano editor via `Ctrl+X`. Answer `Save modified buffer?"` with `Y` and confirm `File Name to Write: config.yaml` with `Enter`.
 
-6. Test you can collect data from all sensors (cont'd): `python3 snapshot.py` - if everything is ok, you should see a bunch of messages (and no error messages) and the last message should look similiar-ish to:
+7. Install the packages. `cd airpollutionpi` into the folder and run `sudo pip3 install -r requirements.txt`. This recursively installs the packages. If you run into any issues then install each package listed on each line of `requirements.txt` individually. E.g. `sudo pip3 install -U 'Adafruit-DHT==1.4.0'`
+
+8. Test you can collect data from all sensors (cont'd): `python3 snapshot.py` - if everything is ok, you should see a bunch of messages (and no error messages) and the last message should look similiar-ish to:
 
 ```
 2019-03-06 21:46:02,643 - INFO - __main__ [222] - Write data to file: ['healthcheck,source=pi-in-a-bottle-1,input=internal cpu_temperature=37.932 1551908759869443584', 'weather,source=pi-in-a-bottle-1,input=bme280 humidity=64.8 1551908759869443584', 'weather,source=pi-in-a-bottle-1,input=bme280 temperature=19.22 1551908759869443584', 'weather,source=pi-in-a-bottle-1,input=bme280 pressure=980.47 1551908759869443584', 'pollution,source=pi-in-a-bottle-1,input=sds011 pm2.5=0.4 1551908759869443584', 'pollution,source=pi-in-a-bottle-1,input=sds011 pm10=0.6 1551908759869443584'] => /home/pi/data/1551908759869443584.tmp
@@ -112,7 +114,7 @@ total 4
 
 It should list one file and you should see a date and time that is close to now.
 
-7. Test you can broadcast the data to the server: `python3 broadcast.py`. This should respond with something like this:
+9. Test you can broadcast the data to the server: `python3 broadcast.py`. This should respond with something like this:
 
 ```
 2019-03-06 21:49:44,974 - INFO - __main__ [49] - Collect files in path /home/pi/data
@@ -132,7 +134,7 @@ pollution,source=pi-in-a-bottle-1,input=sds011 pm10=0.8 1551908945907030016
 
 The second line from the bottom should really say `Response: 204`. If there is any other response code which is not 204, something is not right and needs to be fixed before moving on to the next step.
 
-8. Run `crontab -e`. The first time round, it'll ask you:
+10. Run `crontab -e`. The first time round, it'll ask you:
 
 ```
 Select an editor.  To change later, run 'select-editor'.
